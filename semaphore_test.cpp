@@ -17,7 +17,7 @@ auto service_main()
 
 auto client_main(int const client_uid)
 {
-    std::cout << "Setting uid = " << client_uid << "\n";
+    std::cout << "Client: Setting uid = " << client_uid << "\n";
 
     setuid(client_uid);
     setgid(client_uid);
@@ -64,10 +64,12 @@ auto main(int argc, char** argv) -> int
 
     // Create the semaphore
     std::cout << "Setting unrestricted permissions\n";
+    auto old_umask = umask(0);
     boost::interprocess::permissions perms;
     perms.set_unrestricted();
-    perms.set_permissions(0777);
     boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), "my_semaphore", 0, perms);
+    // restore umask
+    umask(old_umask);
 
     auto pid = fork();
 
@@ -87,7 +89,6 @@ auto main(int argc, char** argv) -> int
     else
     {
         // Service
-        std::cout << "In pid != 0\n";
 
         if (skip_service)
         {
